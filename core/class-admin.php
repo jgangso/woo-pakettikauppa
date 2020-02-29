@@ -667,7 +667,45 @@ if ( ! class_exists(__NAMESPACE__ . '\Admin') ) {
 
               <?php $all_additional_services = $this->shipment->get_additional_services(); ?>
               <?php foreach ( $all_additional_services as $method_code => $_additional_services ) : ?>
-                <ol style="list-style: circle; display: none;" class="pk-admin-additional-services" id="pk-admin-additional-services-<?php echo $method_code; ?>">
+                <div style="display: none;" class="pk-admin-additional-services" id="pk-admin-additional-services-<?php echo $method_code; ?>">
+                <?php
+                $has_pickup_points = $this->shipment->service_has_pickup_points($method_code);
+
+                if ($has_pickup_points) {
+                  $shipping_postcode = $order->get_shipping_postcode();
+                  $shipping_address  = $order->get_shipping_address_1();
+                  $shipping_country  = $order->get_shipping_country();
+                  $title = 'Pickup point search';
+
+                  $address_override_field_name = str_replace('wc_', '', $this->core->prefix) . '_merchant_override_custom_pickup_point_address';
+                  $address = get_post_meta($order->get_id(), $address_override_field_name, true);
+                  $address = empty($address) ? "$shipping_address, $shipping_postcode, $shipping_country" : $address;
+
+                  echo "<h3>$title</h3>";
+
+                  woocommerce_form_field(
+                    $address_override_field_name,
+                    array(
+                      'type'              => 'textarea',
+                      'custom_attributes' => array(
+                        'onchange' => 'search_pickup_points(this)',
+                      ),
+                    ),
+                    $address
+                  );
+
+
+                  try {
+                    $options_array = $this->core->frontend->fetch_pickup_point_options($address, $shipping_postcode, $shipping_address, $shipping_country, $method_code);
+
+                    var_dump($options_array);
+                  } catch (\Exception $e) {
+                    echo $e->getMessage();
+                  }
+
+                };
+                ?>
+                <ol style="list-style: circle;" >
                   <?php $show_3102 = false; ?>
                   <?php foreach ( $_additional_services as $additional_service ) : ?>
                     <?php if ( empty($additional_service->specifiers) || $additional_service->service_code === '3101' ) : ?>
@@ -688,7 +726,9 @@ if ( ! class_exists(__NAMESPACE__ . '\Admin') ) {
                       <input class="pakettikauppa_metabox_values" type="number" name="wc_pakettikauppa_mps_count" value="1" style="width: 3em;" min="1" step="1" max="15">
                     </li>
                   <?php endif; ?>
+
                 </ol>
+                </div>
               <?php endforeach; ?>
             </fieldset>
           </div>
@@ -734,6 +774,12 @@ if ( ! class_exists(__NAMESPACE__ . '\Admin') ) {
       }
 
       $order = new \WC_Order($post_id);
+
+      if (isset($_POST['pakettikauppa_merchant_override_custom_pickup_point_address'])) {
+        $v = $_POST['pakettikauppa_merchant_override_custom_pickup_point_address'];
+
+        // update_post_meta($post_id, '_pakettikauppa_merchant_override_custom_pickup_point_address', sanitize_text_field($v));
+      }
 
       $command = key($_POST['wc_pakettikauppa']);
 

@@ -405,6 +405,10 @@ if ( ! class_exists(__NAMESPACE__ . '\Text') ) {
       return __('No pickup points were found. Check the address.', 'woo-pakettikauppa');
     }
 
+    public function pickup_points() {
+      return __('Pickup points', 'woo-pakettikauppa');
+    }
+
     public function something_went_wrong_while_searching_pickup_points_error() {
       return __('An error occurred while searching for pickup points.', 'woo-pakettikauppa');
     }

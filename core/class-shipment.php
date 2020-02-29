@@ -323,8 +323,9 @@ if ( ! class_exists(__NAMESPACE__ . '\Shipment') ) {
       }
 
       $service_id = get_post_meta($order->get_id(), '_' . $this->core->prefix . '_service_id', true);
+      $service_id_empty = empty($service_id);
 
-      if ( empty($service_id) ) {
+      if ( $service_id_empty ) {
         $shipping_methods = $order->get_shipping_methods();
 
         $shipping_method = array_pop($shipping_methods);
@@ -332,13 +333,10 @@ if ( ! class_exists(__NAMESPACE__ . '\Shipment') ) {
         if ( ! empty($shipping_method) ) {
           $service_id = $shipping_method->get_meta('service_code');
         }
-      }
 
-      if ( empty($service_id) ) {
-        $service_id = get_post_meta($order->get_id(), '_' . str_replace('wc_', '', $this->core->prefix) . '_pickup_point_provider_id', true);
-      }
+        $pickup_point_data = $this->get_pickup_point_data_from_order($order);
+        $service_id = $pickup_point_data['provider_id'];
 
-      if ( empty($service_id) ) {
         $shipping_methods = $order->get_shipping_methods();
 
         $chosen_shipping_method = array_pop($shipping_methods);
@@ -366,11 +364,22 @@ if ( ! class_exists(__NAMESPACE__ . '\Shipment') ) {
         return null;
       }
 
-      if ( empty($service_id) && $return_default_shipping_method ) {
+      if ( $service_id_empty && $return_default_shipping_method ) {
         $service_id = self::get_default_service();
       }
 
       return $service_id;
+    }
+
+    public function get_pickup_point_data_from_order( \WC_Order $order ) {
+      $id = $order->get_id();
+      $prefix = '_' . str_replace('wc_', '', $this->core->prefix);
+
+      $point = get_post_meta($id, $prefix . '_pickup_point', true);
+      $point_id = get_post_meta($id, $prefix . '_pickup_point_id', true);
+      $provider_id = get_post_meta($id, $prefix . '_pickup_point_provider_id', true);
+
+      return compact('point', 'point_id', 'provider_id');
     }
 
     /**
@@ -809,7 +818,9 @@ if ( ! class_exists(__NAMESPACE__ . '\Shipment') ) {
      * @return array Available shipping services
      */
     public function services( $admin_page = false ) {
-      $services = array();
+      $services = array(
+        // '__PICKUPPOINTS__' => $this->core->text->pickup_points(), // don't do it
+      );
 
       $all_shipping_methods = $this->get_shipping_methods();
 
@@ -888,6 +899,9 @@ if ( ! class_exists(__NAMESPACE__ . '\Shipment') ) {
 
     public function get_additional_services() {
       $all_shipping_methods = $this->get_shipping_methods();
+
+      // error_log("additional services");
+      // error_log(print_r($all_shipping_methods, true));
 
       if ( $all_shipping_methods === null ) {
         return null;

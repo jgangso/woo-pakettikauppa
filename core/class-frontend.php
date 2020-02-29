@@ -274,10 +274,10 @@ if ( ! class_exists(__NAMESPACE__ . '\Frontend') ) {
           array(
             'type'              => 'textarea',
             'custom_attributes' => array(
-              'onchange' => 'pakettikauppa_custom_pickup_point_change(this)',
+              // 'onchange' => 'pakettikauppa_custom_pickup_point_change(this)',
             ),
           ),
-          WC()->session->get(str_replace('wc_', '', $this->core->prefix) . '_custom_pickup_point_address')
+          "$shipping_address, $shipping_postcode, $shipping_country"
         );
 
         echo '<p>';
@@ -312,7 +312,8 @@ if ( ! class_exists(__NAMESPACE__ . '\Frontend') ) {
         $error = null;
 
         try {
-          $options_array = $this->fetch_pickup_point_options($shipping_postcode, $shipping_address, $shipping_country, implode(',', $shipping_method_providers));
+          $custom_address = WC()->session->get(str_replace('wc_', '', $this->core->prefix) . '_custom_pickup_point_address');
+          $options_array = $this->fetch_pickup_point_options($custom_address, $shipping_postcode, $shipping_address, $shipping_country, implode(',', $shipping_method_providers));
         } catch ( \Exception $e ) {
           $options_array = false;
 
@@ -388,9 +389,7 @@ if ( ! class_exists(__NAMESPACE__ . '\Frontend') ) {
       echo '</td></tr>';
     }
 
-    private function fetch_pickup_point_options( $shipping_postcode, $shipping_address, $shipping_country, $shipping_method_provider ) {
-      $custom_address = WC()->session->get(str_replace('wc_', '', $this->core->prefix) . '_custom_pickup_point_address');
-
+    public function fetch_pickup_point_options( $custom_address, $shipping_postcode, $shipping_address, $shipping_country, $shipping_method_provider ) {
       if ( $custom_address && $this->core->shipping_method_instance->get_option('show_pickup_point_override_query') === 'yes' ) {
         $pickup_point_data = $this->shipment->get_pickup_points_by_free_input($custom_address, $shipping_method_provider);
       } else {

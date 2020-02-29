@@ -75,3 +75,30 @@ jQuery(function( $ ) {
     $("#pk-admin-additional-services-" + selectedService).show();
   };
 });
+
+
+function search_pickup_points(element) {
+  var $ = jQuery;
+  var address = element.value;
+
+  var data = {
+    action: 'pakettikauppa_meta_box',
+    security: $('#pakettikauppa_metabox_nonce').val(),
+    pakettikauppa_merchant_override_custom_pickup_point_address: address
+  }
+
+  $('#woo-pakettikauppa').block({
+    message: null,
+    overlayCSS: {
+      background: '#fff',
+      opacity: 0.6
+    }
+  });
+
+  $.post(woocommerce_admin_meta_boxes.ajax_url, data, function (response) {
+    $("#woo-pakettikauppa .inside").html(response);
+    $('#woo-pakettikauppa').unblock();
+  }).fail(function (e) {
+    console.log('failed to search', e)
+  });
+}

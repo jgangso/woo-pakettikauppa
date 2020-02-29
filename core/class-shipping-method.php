@@ -138,6 +138,15 @@ if ( ! class_exists(__NAMESPACE__ . '\Shipping_Method') ) {
       return $values;
     }
 
+    // public function validate_account_number_field($key, $value) {
+    //   error_log($key.$value);
+    // }
+
+    // public function validate_secret_key_field($key, $value) {
+    //   error_log($key.$value);
+    // }
+
+
     public function generate_pickuppoints_html( $key, $value ) {
       $field_key = $this->get_field_key($key);
 
